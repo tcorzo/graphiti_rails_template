@@ -1,6 +1,6 @@
 welcome = <<-STR
 \n
-Welcome to the JSONAPI Suite generator!
+Welcome to the Graphiti generator!
 =======================================
 
 This will take care of some boilerplate for you, like adding gem dependencies and rspec helpers.

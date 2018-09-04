@@ -1,5 +1,5 @@
 insert_into_file "spec/rails_helper.rb", :after => "require 'rspec/rails'\n" do
-  "require 'jsonapi_spec_helpers'\n"
+  "require 'graphiti_spec_helpers/rspec'\n"
 end
 
 insert_into_file "spec/rails_helper.rb", :after => "RSpec.configure do |config|\n" do
@@ -28,13 +28,17 @@ insert_into_file "spec/rails_helper.rb", :after => "RSpec.configure do |config|\
   <<-STR
 
   config.before :each do
-    JsonapiErrorable.disable!
+    GraphitiErrors.disable!
   end
   STR
 end
 
 insert_into_file "spec/rails_helper.rb", :after => "RSpec.configure do |config|\n" do
-  "  config.include JsonapiSpecHelpers\n"
+  "  config.include GraphitiSpecHelpers::Sugar\n"
+end
+
+insert_into_file "spec/rails_helper.rb", :after => "RSpec.configure do |config|\n" do
+  "  config.include GraphitiSpecHelpers::RSpec\n"
 end
 
 insert_into_file "spec/rails_helper.rb", :after => "RSpec.configure do |config|\n" do
@@ -49,6 +53,4 @@ gsub_file "spec/rails_helper.rb", 'config.use_transactional_fixtures = true' do 
   "# #{match}"
 end
 
-run "mkdir spec/payloads"
 run "mkdir spec/factories"
-run "mkdir -p spec/api/v1"

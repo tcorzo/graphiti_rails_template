@@ -1,14 +1,12 @@
-gem 'jsonapi_suite', '~> 0.7'
-gem 'jsonapi-rails', '~> 0.3.0'
-gem 'jsonapi_swagger_helpers', '~> 0.6', require: false
-gem 'jsonapi_spec_helpers', '~> 0.4', require: false
+gem 'graphiti'
 gem 'kaminari', '~> 1.0'
+gem 'responders', '~> 2.4'
 
 gem_group :development, :test do
   gem 'rspec-rails', '~> 3.5.2'
   gem 'factory_bot_rails', '~> 4.0'
   gem 'faker', '~> 1.7' # keep here for seeds.rb
-  gem 'swagger-diff', '~> 1.1'
+  gem 'graphiti_spec_helpers'
 end
 
 gem_group :test do

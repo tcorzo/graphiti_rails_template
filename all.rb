@@ -11,17 +11,17 @@ def eval_template(name)
 end
 
 def update_config!(attrs)
-  config = File.exists?('.jsonapicfg.yml') ? YAML.load_file('.jsonapicfg.yml') : {}
+  config = File.exists?('.graphiticfg.yml') ? YAML.load_file('.graphiticfg.yml') : {}
   config.merge!(attrs)
-  File.open('.jsonapicfg.yml', 'w') { |f| f.write(config.to_yaml) }
+  File.open('.graphiticfg.yml', 'w') { |f| f.write(config.to_yaml) }
 end
 
 def api_namespace
   @api_namespace ||= begin
     ns = prompt \
       header: "What is your API namespace?",
-      description: "This will be used as a route prefix, e.g. if you want the route '/books_api/v1/authors' your namespace would be 'books_api'",
-      default: 'api'
+      description: "This will be used as a route prefix, e.g. if you want the route '/books_api/v1/authors' your namespace would be '/books_api/v1'",
+      default: '/api/v1'
     update_config!('namespace' => ns)
     ns
   end
@@ -38,7 +38,7 @@ end
 
 welcome = <<-STR
 \n
-Welcome to the JSONAPI Suite generator!
+Welcome to the Graphiti generator!
 =======================================
 
 This will take care of some boilerplate for you, like adding gem dependencies and rspec helpers.
@@ -49,44 +49,32 @@ STR
 say(set_color(welcome.rstrip, :cyan, :bold))
 api_namespace
 
-gem 'jsonapi_suite', '~> 0.7'
-gem 'jsonapi-rails', '~> 0.3.0'
-gem 'jsonapi_swagger_helpers', '~> 0.6', require: false
-gem 'jsonapi_spec_helpers', '~> 0.4', require: false
+gem 'graphiti'
 gem 'kaminari', '~> 1.0'
+gem 'responders', '~> 2.4'
 
 gem_group :development, :test do
   gem 'rspec-rails', '~> 3.5.2'
   gem 'factory_bot_rails', '~> 4.0'
   gem 'faker', '~> 1.7' # keep here for seeds.rb
-  gem 'swagger-diff', '~> 1.1'
+  gem 'graphiti_spec_helpers'
 end
 
 gem_group :test do
   gem 'database_cleaner', '~> 1.6'
 end
 
-insert_into_file "config/routes.rb", :after => "Rails.application.routes.draw do\n" do
-  <<-STR
-  scope path: '/#{api_namespace}' do
-    scope path: '/v1' do
-      # your routes go here
-    end
-  end
-  STR
-end
-
 after_bundle do
 run 'bin/spring stop'
 
+git :init
+git add: '.'
 run "bundle binstub rspec-core"
 rails_command "generate rspec:install"
 run "rm -rf test"
 
-git :init
-git add: '.'
 insert_into_file "spec/rails_helper.rb", :after => "require 'rspec/rails'\n" do
-  "require 'jsonapi_spec_helpers'\n"
+  "require 'graphiti_spec_helpers/rspec'\n"
 end
 
 insert_into_file "spec/rails_helper.rb", :after => "RSpec.configure do |config|\n" do
@@ -115,13 +103,17 @@ insert_into_file "spec/rails_helper.rb", :after => "RSpec.configure do |config|\
   <<-STR
 
   config.before :each do
-    JsonapiErrorable.disable!
+    GraphitiErrors.disable!
   end
   STR
 end
 
 insert_into_file "spec/rails_helper.rb", :after => "RSpec.configure do |config|\n" do
-  "  config.include JsonapiSpecHelpers\n"
+  "  config.include GraphitiSpecHelpers::Sugar\n"
+end
+
+insert_into_file "spec/rails_helper.rb", :after => "RSpec.configure do |config|\n" do
+  "  config.include GraphitiSpecHelpers::RSpec\n"
 end
 
 insert_into_file "spec/rails_helper.rb", :after => "RSpec.configure do |config|\n" do
@@ -136,84 +128,9 @@ gsub_file "spec/rails_helper.rb", 'config.use_transactional_fixtures = true' do 
   "# #{match}"
 end
 
-run "mkdir spec/payloads"
 run "mkdir spec/factories"
-run "mkdir -p spec/api/v1"
 
-rails_command('generate jsonapi_suite:install')
-# swagger
-run "mkdir -p public/#{api_namespace}/docs"
-inside("public/#{api_namespace}/docs") do
-  run "git clone https://github.com/jsonapi-suite/swagger-ui.git && cp swagger-ui/prod-dist/* . && rm -rf swagger-ui"
-end
-
-gsub_file "public/#{api_namespace}/docs/index.html", "basePath: '/api'" do
-  "basePath: '/#{api_namespace}'"
-end
-
-gsub_file "public/#{api_namespace}/docs/index.html", "/app." do |match|
-  "/#{api_namespace}/docs#{match}"
-end
-
-github = prompt \
-  header: "What is the Github URL for this project?",
-  description: "This is used in the Swagger UI to link to your project. It does *not* end in .git. If you don't have a Github URL yet, make sure to edit public/#{api_namespace}/docs/index.html once you have one",
-  default: 'nil'
-
-if github.present?
-  gsub_file "public/#{api_namespace}/docs/index.html", "githubURL: 'http://replaceme.com'" do
-    "githubURL: '#{github}'"
-  end
-end
-
-create_file 'app/controllers/docs_controller.rb' do
-  title = prompt \
-    header: "What is the Swagger title for this project?",
-    description: "Should make sense in the sentence, 'Welcome to the <title> API'",
-    default: 'Untitled'
-  description = prompt \
-    header: "What is the Swagger description for this project?",
-    description: "HTML is OK here",
-    default: '--'
-  contact_name = prompt \
-    header: "What is the Swagger contact name?",
-    description: "e.g. 'John Doe'",
-    default: '--'
-  contact_email = prompt \
-    header: "What is the Swagger contact email?",
-    default: '--'
-
-  <<-STR
-require 'jsonapi_swagger_helpers'
-
-class DocsController < ActionController::API
-  include JsonapiSwaggerHelpers::DocsControllerMixin
-
-  swagger_root do
-    key :swagger, '2.0'
-    info do
-      key :version, '1.0.0'
-      key :title, '#{title}'
-      key :description, '#{description}'
-      contact do
-        key :name, '#{contact_name}'
-        key :email, '#{contact_email}'
-      end
-    end
-    key :basePath, '/#{api_namespace}'
-    key :consumes, ['application/json']
-    key :produces, ['application/json']
-  end
-end
-  STR
-end
-
-insert_into_file "config/routes.rb", after: "scope path: '/#{api_namespace}' do\n" do
-  "    resources :docs, only: [:index], path: '/swagger'\n\n"
-end
-
-insert_into_file "Rakefile", after: "require_relative 'config/application'\n" do
-  "require 'jsonapi_swagger_helpers'\n"
-end
-
-say(set_color("\nYou're all set! If you need help developing JSONAPI, please head to our documentation website: https://jsonapi-suite.github.io/jsonapi_suite\n", :green, :bold))end
+rails_command('generate graphiti:install')
+run 'bundle binstubs bundler --force'
+say(set_color("\nYou're all set!
+", :green, :bold))end

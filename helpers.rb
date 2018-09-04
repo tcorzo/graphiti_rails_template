@@ -11,17 +11,17 @@ def eval_template(name)
 end
 
 def update_config!(attrs)
-  config = File.exists?('.jsonapicfg.yml') ? YAML.load_file('.jsonapicfg.yml') : {}
+  config = File.exists?('.graphiticfg.yml') ? YAML.load_file('.graphiticfg.yml') : {}
   config.merge!(attrs)
-  File.open('.jsonapicfg.yml', 'w') { |f| f.write(config.to_yaml) }
+  File.open('.graphiticfg.yml', 'w') { |f| f.write(config.to_yaml) }
 end
 
 def api_namespace
   @api_namespace ||= begin
     ns = prompt \
       header: "What is your API namespace?",
-      description: "This will be used as a route prefix, e.g. if you want the route '/books_api/v1/authors' your namespace would be 'books_api'",
-      default: 'api'
+      description: "This will be used as a route prefix, e.g. if you want the route '/books_api/v1/authors' your namespace would be '/books_api/v1'",
+      default: '/api/v1'
     update_config!('namespace' => ns)
     ns
   end
