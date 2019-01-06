@@ -1,5 +1,5 @@
 gem 'graphiti'
-gem 'vandal_ui', '~> 0.1'
+gem 'vandal_ui'
 gem 'kaminari', '~> 1.0'
 gem 'responders', '~> 2.4'
 
