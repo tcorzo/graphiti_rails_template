@@ -50,6 +50,7 @@ say(set_color(welcome.rstrip, :cyan, :bold))
 api_namespace
 
 gem 'graphiti'
+gem 'vandal_ui', '~> 0.1'
 gem 'kaminari', '~> 1.0'
 gem 'responders', '~> 2.4'
 
@@ -132,5 +133,6 @@ run "mkdir spec/factories"
 
 rails_command('generate graphiti:install')
 run 'bundle binstubs bundler --force'
+rake('vandal:install')
 say(set_color("\nYou're all set!
 ", :green, :bold))end

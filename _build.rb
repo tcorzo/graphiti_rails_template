@@ -11,6 +11,7 @@ File.open('all.rb', 'w') do |f|
     f.write("#{File.read("rspec.rb")}\n")
     f.write("rails_command('generate graphiti:install')\n")
     f.write("run 'bundle binstubs bundler --force'\n")
+    f.write("rake('vandal:install')\n")
     f.write("say(set_color(\"\\nYou're all set!\n\", :green, :bold))")
   f.write("end\n") # after bundle
 end
