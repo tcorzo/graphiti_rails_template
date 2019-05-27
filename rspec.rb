@@ -28,9 +28,13 @@ insert_into_file "spec/rails_helper.rb", :after => "RSpec.configure do |config|\
   <<-STR
 
   config.before :each do
-    GraphitiErrors.disable!
+    handle_request_exceptions(false)
   end
   STR
+end
+
+insert_into_file "spec/rails_helper.rb", :after => "RSpec.configure do |config|\n" do
+  "  config.include Graphiti::Rails::TestHelpers\n"
 end
 
 insert_into_file "spec/rails_helper.rb", :after => "RSpec.configure do |config|\n" do

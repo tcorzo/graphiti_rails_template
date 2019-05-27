@@ -1,4 +1,5 @@
 gem 'graphiti'
+gem 'graphiti-rails'
 gem 'vandal_ui'
 gem 'kaminari', '~> 1.0'
 gem 'responders', '~> 2.4'
