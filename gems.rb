@@ -17,7 +17,7 @@ gem_group :development, :test do
   else
     gem 'rspec-rails', '~> 4.0.0beta2'
   end
-  
+
   gem 'factory_bot_rails', '~> 5.0'
   gem 'faker', '~> 2.5' # keep here for seeds.rb
   gem 'graphiti_spec_helpers'
